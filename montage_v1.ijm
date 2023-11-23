@@ -12,6 +12,11 @@ Dialog.addNumber("Last Slice", 3);
 Dialog.addNumber("Scale", 0.5);
 Dialog.addNumber("Scale Bar Width", 50);
 
+luts = getList("LUTs");
+Dialog.addChoice("Channel 1 LUT", luts, "Blue");
+Dialog.addChoice("Channel 2 LUT", luts, "Green");
+Dialog.addChoice("Channel 3 LUT", luts, "Magenta");
+
 Dialog.show();
 //exit;
 
@@ -30,6 +35,10 @@ last_slice = Dialog.getNumber();
 montage_scale = Dialog.getNumber();
 scale_bar_width = Dialog.getNumber();
 
+lut_1 = Dialog.getChoice();
+lut_2 = Dialog.getChoice();
+lut_3 = Dialog.getChoice();
+
 num_images = 1;
 if (process_all) {
 	num_images = nImages;
@@ -41,8 +50,7 @@ for (i = 0; i < num_images; i++) {
 	
 	path = getDirectory("image");
 	title = getTitle();
-	width = getWidth();
-	height = getHeight();
+	Stack.getDimensions(width, height, channels, slices, frames) 
 	
 	title = replace(title, "/", "-");
 	rename(title);
@@ -50,12 +58,11 @@ for (i = 0; i < num_images; i++) {
 	Property.set("CompositeProjection", "null");
 	Stack.setDisplayMode("color");
 	
-	Stack.setChannel(1);
-	run("Blue");
-	Stack.setChannel(2);
-	run("Green");
-	Stack.setChannel(3);
-	run("Magenta");
+	luts = newArray(lut_1, lut_2, lut_3);
+	for (j = 0; j < channels; j++) {
+		Stack.setChannel(j);
+		run(luts[j]);
+	}
 	
 	Property.set("CompositeProjection", "null");
 	Stack.setDisplayMode("grayscale");
@@ -69,7 +76,8 @@ for (i = 0; i < num_images; i++) {
 	selectImage(title);
 	Property.set("CompositeProjection", "Sum");
 	Stack.setDisplayMode("composite");
-	run("RGB Color");
+	run("RGB Color", "keep");
+	rename("RGB");
 	run("Scale...", "x="+toString(montage_scale)+" y="+toString(montage_scale)+" width="+width+" height="+height+" interpolation=Bilinear average create title=scale");
 	scaleWidth = getWidth();
 	scaleHeight = getHeight();
@@ -91,7 +99,8 @@ for (i = 0; i < num_images; i++) {
 	// close();
 	selectImage("scale");
 	close();
-	selectImage(title + " (RGB)");
+	//selectImage(title + " (RGB)");
+	selectImage("RGB");
 	close();
 	
 	if (close_montage) {
