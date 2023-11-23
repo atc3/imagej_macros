@@ -1,5 +1,6 @@
 Dialog.create("Montage v1");
 
+Dialog.addCheckbox("Save initial image", false);
 Dialog.addCheckbox("Process all open images?", false);
 Dialog.addCheckbox("Close montage images?", false);
 
@@ -17,6 +18,7 @@ Dialog.show();
 //run("Channels Tool...");
 //run("Brightness/Contrast...");
 
+save_initial = Dialog.getCheckbox();
 process_all = Dialog.getCheckbox();
 close_montage = Dialog.getCheckbox();
 
@@ -42,6 +44,8 @@ for (i = 0; i < num_images; i++) {
 	width = getWidth();
 	height = getHeight();
 	
+	title = replace(title, "/", "-");
+	rename(title);
 	
 	Property.set("CompositeProjection", "null");
 	Stack.setDisplayMode("color");
@@ -55,7 +59,10 @@ for (i = 0; i < num_images; i++) {
 	
 	Property.set("CompositeProjection", "null");
 	Stack.setDisplayMode("grayscale");
-	// run("Save");
+	
+	if (save_initial) {
+		save(path + title + ".tif");
+	}
 	
 	run("Make Montage...", "columns=" + toString(floor(columns)) + " rows=" + toString(floor(rows)) + " scale=" + toString(montage_scale) + " first=" + toString(first_slice) + " last=" + toString(last_slice));
 	
@@ -88,7 +95,7 @@ for (i = 0; i < num_images; i++) {
 	close();
 	
 	if (close_montage) {
-		selectImage("Montage");
+		selectImage(title + "_montage.tif");
 		close();
 	}
 }
