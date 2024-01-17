@@ -1,6 +1,7 @@
 Dialog.create("Montage v1");
 
 Dialog.addCheckbox("Save initial image", false);
+Dialog.addCheckbox("Close initial image", false);
 Dialog.addCheckbox("Process all open images?", false);
 Dialog.addCheckbox("Close montage images?", false);
 
@@ -106,6 +107,19 @@ for (i = 0; i < num_images; i++) {
 	if (close_montage) {
 		selectImage(title + "_montage.tif");
 		close();
+	}
+	
+}
+
+if (close_initial) {
+	if (process_all) {
+		for (i = num_images; i > 0; i--) { 
+			selectImage(i); 
+			close();
+		}
+	} else {
+		selectImage(title);
+		close();	
 	}
 }
 
