@@ -4,6 +4,7 @@ Dialog.addCheckbox("Save initial image", false);
 Dialog.addCheckbox("Close initial image", false);
 Dialog.addCheckbox("Process all open images?", false);
 Dialog.addCheckbox("Close montage images?", false);
+Dialog.addString("Output path", "image (default)");
 
 Dialog.addNumber("Columns", 2);
 Dialog.addNumber("Rows", 2);
@@ -27,6 +28,7 @@ Dialog.show();
 save_initial = Dialog.getCheckbox();
 process_all = Dialog.getCheckbox();
 close_montage = Dialog.getCheckbox();
+output_path = Dialog.getString();
 
 columns = Dialog.getNumber();
 rows = Dialog.getNumber();
@@ -50,6 +52,10 @@ for (i = 0; i < num_images; i++) {
 	}
 	
 	path = getDirectory("image");
+	if (output_path != "image (default)") {
+		path = output_path;
+	}
+	
 	title = getTitle();
 	Stack.getDimensions(width, height, channels, slices, frames) 
 	
