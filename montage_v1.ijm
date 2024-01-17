@@ -10,9 +10,11 @@ Dialog.addNumber("Columns", 2);
 Dialog.addNumber("Rows", 2);
 Dialog.addNumber("First Slice", 1);
 Dialog.addNumber("Last Slice", 3);
+Dialog.addNumber("Increment", 1);
 
 Dialog.addNumber("Scale", 0.5);
 Dialog.addNumber("Scale Bar Width", 50);
+Dialog.addNumber("Font Scaling Factor", 3);
 
 luts = getList("LUTs");
 Dialog.addChoice("Channel 1 LUT", luts, "Blue");
@@ -26,6 +28,7 @@ Dialog.show();
 //run("Brightness/Contrast...");
 
 save_initial = Dialog.getCheckbox();
+close_initial = Dialog.getCheckbox();
 process_all = Dialog.getCheckbox();
 close_montage = Dialog.getCheckbox();
 output_path = Dialog.getString();
@@ -34,9 +37,11 @@ columns = Dialog.getNumber();
 rows = Dialog.getNumber();
 first_slice = Dialog.getNumber();
 last_slice = Dialog.getNumber();
+increment = Dialog.getNumber();
 
 montage_scale = Dialog.getNumber();
 scale_bar_width = Dialog.getNumber();
+font_scale_factor = Dialog.getNumber();
 
 lut_1 = Dialog.getChoice();
 lut_2 = Dialog.getChoice();
@@ -51,6 +56,9 @@ for (i = 0; i < num_images; i++) {
 		selectImage(i+1); 
 	}
 	
+	Property.set("CompositeProjection", "Sum");
+	Stack.setDisplayMode("composite");
+	
 	path = getDirectory("image");
 	if (output_path != "image (default)") {
 		path = output_path;
@@ -58,16 +66,26 @@ for (i = 0; i < num_images; i++) {
 	
 	title = getTitle();
 	Stack.getDimensions(width, height, channels, slices, frames) 
+	// rename("original");
+	
+	// Crunch into just one slice (the current slice)
+	Stack.getPosition(channel, slice, frame);
+	if (slices > 1) {
+		run("Duplicate...", "title=dupe duplicate slices=" + toString(slice));	
+	} else {
+		run("Duplicate...", "title=dupe duplicate");	
+	}
+	selectImage("dupe");
 	
 	title = replace(title, "/", "-");
-	rename(title);
+	// rename(title);
 	
 	Property.set("CompositeProjection", "null");
 	Stack.setDisplayMode("color");
 	
 	luts = newArray(lut_1, lut_2, lut_3);
 	for (j = 0; j < channels; j++) {
-		Stack.setChannel(j);
+		Stack.setChannel(j+1);
 		run(luts[j]);
 	}
 	
@@ -75,12 +93,16 @@ for (i = 0; i < num_images; i++) {
 	Stack.setDisplayMode("grayscale");
 	
 	if (save_initial) {
+		selectImage(title);
 		save(path + title + ".tif");
+		selectImage("dupe");
 	}
 	
-	run("Make Montage...", "columns=" + toString(floor(columns)) + " rows=" + toString(floor(rows)) + " scale=" + toString(montage_scale) + " first=" + toString(first_slice) + " last=" + toString(last_slice));
+	run("Make Montage...", "columns=" + toString(floor(columns)) + " rows=" + toString(floor(rows)) + " scale=" + toString(montage_scale) + " first=" + toString(first_slice) + " last=" + toString(last_slice) + " increment=" + toString(increment));
+	wait(200);
 	
-	selectImage(title);
+	selectImage("dupe");
+	
 	Property.set("CompositeProjection", "Sum");
 	Stack.setDisplayMode("composite");
 	run("RGB Color", "keep");
@@ -94,21 +116,22 @@ for (i = 0; i < num_images; i++) {
 	
 	selectImage("Montage");
 	rename(title + "_montage.tif");
-	makeRectangle(scaleWidth, scaleHeight, scaleWidth, scaleHeight);
+	makeRectangle(scaleWidth*(columns-1), scaleHeight*(rows-1), scaleWidth, scaleHeight);
 	run("Paste");
 	
 	scale_bar_thickness = floor((scaleHeight*2)/200);
-	scale_bar_font_size = floor(scale_bar_thickness * 3);
+	scale_bar_font_size = floor(scale_bar_thickness * font_scale_factor);
 	
 	run("Scale Bar...", "width=" + toString(scale_bar_width) + " height=" + scale_bar_width + " thickness=" + toString(scale_bar_thickness) + " font=" + scale_bar_font_size + " overlay");
+	run("Flatten");
 	
 	save(path + title + "_montage.tif");
-	// close();
 	selectImage("scale");
 	close();
-	//selectImage(title + " (RGB)");
 	selectImage("RGB");
 	close();
+	selectImage("dupe");
+	close();	
 	
 	if (close_montage) {
 		selectImage(title + "_montage.tif");
