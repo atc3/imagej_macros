@@ -4,6 +4,7 @@ Dialog.addCheckbox("Save initial image", false);
 Dialog.addCheckbox("Close initial image", false);
 Dialog.addCheckbox("Process all open images?", false);
 Dialog.addCheckbox("Close montage images?", false);
+Dialog.addCheckbox("Flatten?", false);
 Dialog.addString("Output path", "image (default)");
 
 Dialog.addNumber("Columns", 2);
@@ -20,6 +21,7 @@ luts = getList("LUTs");
 Dialog.addChoice("Channel 1 LUT", luts, "Blue");
 Dialog.addChoice("Channel 2 LUT", luts, "Green");
 Dialog.addChoice("Channel 3 LUT", luts, "Magenta");
+Dialog.addChoice("Channel 4 LUT", luts, "Cyan");
 
 Dialog.show();
 //exit;
@@ -31,6 +33,7 @@ save_initial = Dialog.getCheckbox();
 close_initial = Dialog.getCheckbox();
 process_all = Dialog.getCheckbox();
 close_montage = Dialog.getCheckbox();
+do_flatten = Dialog.getCheckbox();
 output_path = Dialog.getString();
 
 columns = Dialog.getNumber();
@@ -46,6 +49,7 @@ font_scale_factor = Dialog.getNumber();
 lut_1 = Dialog.getChoice();
 lut_2 = Dialog.getChoice();
 lut_3 = Dialog.getChoice();
+lut_4 = Dialog.getChoice();
 
 num_images = 1;
 if (process_all) {
@@ -83,7 +87,7 @@ for (i = 0; i < num_images; i++) {
 	Property.set("CompositeProjection", "null");
 	Stack.setDisplayMode("color");
 	
-	luts = newArray(lut_1, lut_2, lut_3);
+	luts = newArray(lut_1, lut_2, lut_3, lut_4);
 	for (j = 0; j < channels; j++) {
 		Stack.setChannel(j+1);
 		run(luts[j]);
@@ -123,7 +127,16 @@ for (i = 0; i < num_images; i++) {
 	scale_bar_font_size = floor(scale_bar_thickness * font_scale_factor);
 	
 	run("Scale Bar...", "width=" + toString(scale_bar_width) + " height=" + scale_bar_width + " thickness=" + toString(scale_bar_thickness) + " font=" + scale_bar_font_size + " overlay");
-	run("Flatten");
+	
+	if (do_flatten) {
+		rename("pre_flatten");
+		run("Flatten");	
+		rename(title + "_montage.tif");
+		selectImage("pre_flatten");
+		close();
+		selectImage(title + "_montage.tif");
+	}
+	
 	
 	save(path + title + "_montage.tif");
 	selectImage("scale");
